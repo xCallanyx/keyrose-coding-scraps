@@ -32,6 +32,7 @@
             const [selectedAssignment, setSelectedAssignment] = useState(assignments[0]);
             const [newAssignment, setNewAssignment] = useState("");
             const [photos, setPhotos] = useState([]);
+            const [isFrontCamera, setIsFrontCamera] = useState(false);
             const videoRef = useRef(null);
             const streamRef = useRef(null);
             const [showCamera, setShowCamera] = useState(false);
@@ -45,7 +46,7 @@
                     }
 
                     const constraints = {
-                        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
+                        video: { facingMode: isFrontCamera ? "user" : "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
                     };
 
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -59,6 +60,11 @@
                 } catch (err) {
                     setError(err.message);
                 }
+            };
+
+            const toggleCamera = () => {
+                setIsFrontCamera(prev => !prev);
+                startCamera();
             };
 
             const stopCamera = () => {
@@ -160,6 +166,7 @@
                             <div className="space-y-2">
                                 <video ref={videoRef} autoPlay playsInline className="camera-preview rounded bg-black"/>
                                 <button onClick={capturePhoto} className="bg-green-500 text-white p-2 rounded">Capture Photo</button>
+                                <button onClick={toggleCamera} className="bg-yellow-500 text-white p-2 rounded">Flip Camera</button>
                                 <button onClick={stopCamera} className="bg-red-500 text-white p-2 rounded">Stop Camera</button>
                             </div>
                         )}
