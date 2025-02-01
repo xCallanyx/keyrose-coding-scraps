@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Assignment Photo Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { Camera, Download, X } = lucide;
+        
+        const ArtPhotoCapture = () => {
+            const [photos, setPhotos] = useState([]);
+            const [studentName, setStudentName] = useState('');
+            const [assignmentName, setAssignmentName] = useState('');
+            const videoRef = useRef(null);
+            const streamRef = useRef(null);
+            const [showCamera, setShowCamera] = useState(false);
+
+            const startCamera = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    streamRef.current = stream;
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                    }
+                    setShowCamera(true);
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    alert('Could not access camera. Please make sure you\'ve granted camera permissions.');
+                }
+            };
+
+            const stopCamera = () => {
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                }
+                setShowCamera(false);
+            };
+
+            const capturePhoto = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoRef.current.videoWidth;
+                canvas.height = videoRef.current.videoHeight;
+                canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
+                const photoUrl = canvas.toDataURL('image/jpeg');
+                setPhotos([...photos, {
+                    url: photoUrl,
+                    student: studentName,
+                    assignment: assignmentName,
+                    timestamp: new Date().toLocaleString()
+                }]);
+            };
+
+            const downloadPhotos = () => {
+                const data = JSON.stringify(photos);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `art-photos-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            };
+
+            return (
+                <div className="p-4 max-w-2xl mx-auto">
+                    <div className="mb-4 space-y-2">
+                        <input
+                            type="text"
+                            placeholder="Student Name"
+                            value={studentName}
+                            onChange={(e) => setStudentName(e.target.value)}
+                            className="w-full p-2 border rounded"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Assignment Name"
+                            value={assignmentName}
+                            onChange={(e) => setAssignmentName(e.target.value)}
+                            className="w-full p-2 border rounded"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        {!showCamera ? (
+                            <button 
+                                onClick={startCamera}
+                                className="bg-blue-500 text-white p-2 rounded flex items-center gap-2"
+                            >
+                                <Camera size={20} />
+                                Start Camera
+                            </button>
+                        ) : (
+                            <div className="space-y-2">
+                                <video 
+                                    ref={videoRef} 
+                                    autoPlay 
+                                    playsInline 
+                                    className="w-full rounded"
+                                />
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={capturePhoto}
+                                        className="bg-green-500 text-white p-2 rounded flex-1"
+                                    >
+                                        Capture Photo
+                                    </button>
+                                    <button 
+                                        onClick={stopCamera}
+                                        className="bg-red-500 text-white p-2 rounded"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        {photos.map((photo, index) => (
+                            <div key={index} className="border rounded p-2">
+                                <img src={photo.url} alt="Captured artwork" className="w-full rounded" />
+                                <div className="mt-2 text-sm">
+                                    <p><strong>Student:</strong> {photo.student}</p>
+                                    <p><strong>Assignment:</strong> {photo.assignment}</p>
+                                    <p><strong>Time:</strong> {photo.timestamp}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {photos.length > 0 && (
+                        <button
+                            onClick={downloadPhotos}
+                            className="bg-blue-500 text-white p-2 rounded flex items-center gap-2"
+                        >
+                            <Download size={20} />
+                            Download All Photos
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const { useState, useRef } = React;
+        ReactDOM.render(<ArtPhotoCapture />, document.getElementById('root'));
+    </script>
+</body>
+</html>
