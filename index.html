@@ -8,13 +8,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .camera-preview {
+            width: 100%;
+            max-height: 80vh;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror the preview */
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
         
-        // Simple icon components
+        // Simple icon components stay the same
         const CameraIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -45,109 +53,98 @@
             const streamRef = useRef(null);
             const [showCamera, setShowCamera] = useState(false);
             const [error, setError] = useState(null);
-
-            useEffect(() => {
-                // Cleanup function to stop camera when component unmounts
-                return () => {
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                    }
-                };
-            }, []);
+            const [isFrontCamera, setIsFrontCamera] = useState(true);
 
             const startCamera = async () => {
                 try {
                     setError(null);
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                    }
+
                     const constraints = {
                         video: {
-                            facingMode: 'environment', // Prefer back camera
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
+                            facingMode: isFrontCamera ? "user" : "environment",
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
                         }
                     };
-                    
-                    console.log('Requesting camera access...');
+
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    console.log('Camera access granted');
-                    
                     streamRef.current = stream;
+                    
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
-                        console.log('Video stream set');
-                        
-                        // Wait for video to be ready
-                        videoRef.current.onloadedmetadata = () => {
-                            console.log('Video metadata loaded');
-                            videoRef.current.play()
-                                .then(() => console.log('Video playing'))
-                                .catch(e => console.error('Video play error:', e));
-                        };
+                        await videoRef.current.play();
                     }
+                    
                     setShowCamera(true);
                 } catch (err) {
                     console.error('Camera error:', err);
-                    setError(`Camera error: ${err.message}`);
-                    alert(`Could not access camera: ${err.message}`);
+                    setError(err.message);
                 }
+            };
+
+            const toggleCamera = () => {
+                setIsFrontCamera(!isFrontCamera);
+                startCamera();
             };
 
             const stopCamera = () => {
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
                 }
+                if (videoRef.current) {
+                    videoRef.current.srcObject = null;
+                }
                 setShowCamera(false);
-                setError(null);
             };
 
             const capturePhoto = () => {
                 try {
-                    if (!videoRef.current) {
-                        throw new Error('Video element not ready');
-                    }
-
-                    const canvas = document.createElement('canvas');
                     const video = videoRef.current;
-                    
-                    // Use the actual video dimensions
+                    const canvas = document.createElement('canvas');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     
-                    console.log(`Capturing photo ${canvas.width}x${canvas.height}`);
+                    const ctx = canvas.getContext('2d');
+                    if (isFrontCamera) {
+                        // Flip the image horizontally for front camera
+                        ctx.scale(-1, 1);
+                        ctx.translate(-canvas.width, 0);
+                    }
+                    ctx.drawImage(video, 0, 0);
                     
-                    const context = canvas.getContext('2d');
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    const photoUrl = canvas.toDataURL('image/jpeg', 0.9);
                     setPhotos([...photos, {
                         url: photoUrl,
                         student: studentName,
                         assignment: assignmentName,
                         timestamp: new Date().toLocaleString()
                     }]);
-                    
-                    console.log('Photo captured successfully');
                 } catch (err) {
-                    console.error('Photo capture error:', err);
-                    setError(`Photo capture error: ${err.message}`);
-                    alert(`Could not capture photo: ${err.message}`);
+                    setError('Failed to capture photo: ' + err.message);
                 }
             };
 
             const downloadPhotos = () => {
-                try {
-                    const data = JSON.stringify(photos);
-                    const blob = new Blob([data], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `art-photos-${new Date().toISOString().slice(0,10)}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                } catch (err) {
-                    console.error('Download error:', err);
-                    setError(`Download error: ${err.message}`);
-                }
+                const data = JSON.stringify(photos);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `art-photos-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
             };
+
+            useEffect(() => {
+                return () => {
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                    }
+                };
+            }, []);
 
             return (
                 <div className="p-4 max-w-2xl mx-auto">
@@ -189,7 +186,10 @@
                                     ref={videoRef} 
                                     autoPlay 
                                     playsInline
-                                    className="w-full h-64 object-cover rounded bg-black"
+                                    className="camera-preview rounded bg-black"
+                                    style={{
+                                        transform: isFrontCamera ? 'scaleX(-1)' : 'none'
+                                    }}
                                 />
                                 <div className="flex gap-2">
                                     <button 
@@ -197,6 +197,12 @@
                                         className="bg-green-500 text-white p-2 rounded flex-1"
                                     >
                                         Capture Photo
+                                    </button>
+                                    <button 
+                                        onClick={toggleCamera}
+                                        className="bg-blue-500 text-white p-2 rounded"
+                                    >
+                                        Switch Camera
                                     </button>
                                     <button 
                                         onClick={stopCamera}
@@ -212,7 +218,11 @@
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         {photos.map((photo, index) => (
                             <div key={index} className="border rounded p-2">
-                                <img src={photo.url} alt="Captured artwork" className="w-full rounded" />
+                                <img 
+                                    src={photo.url} 
+                                    alt="Captured artwork" 
+                                    className="w-full rounded"
+                                />
                                 <div className="mt-2 text-sm">
                                     <p><strong>Student:</strong> {photo.student}</p>
                                     <p><strong>Assignment:</strong> {photo.assignment}</p>
