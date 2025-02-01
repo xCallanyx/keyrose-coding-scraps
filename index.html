@@ -13,8 +13,11 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
+        // First declare all the imports and constants we need
         const { Camera, Download, X } = lucide;
-        
+        const { useState, useRef } = React;
+
+        // Then define the component
         const ArtPhotoCapture = () => {
             const [photos, setPhotos] = useState([]);
             const [studentName, setStudentName] = useState('');
@@ -148,7 +151,7 @@
             );
         };
 
-        const { useState, useRef } = React;
+        // Finally render the app
         ReactDOM.render(<ArtPhotoCapture />, document.getElementById('root'));
     </script>
 </body>
