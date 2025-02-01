@@ -19,46 +19,23 @@
 <body>
     <div id="root"></div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const correctPassword = "test"; 
-            const storedPassword = sessionStorage.getItem("accessGranted");
-
-            if (storedPassword !== correctPassword) {
-                document.body.innerHTML = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
-                        <h2>Enter Password to Access</h2>
-                        <input type="password" id="passwordInput" style="margin:10px; padding:5px;"/>
-                        <button id="submitPassword" style="padding:5px 10px; margin-top:10px;">Submit</button>
-                        <p style="color:red; display:none;" id="errorMessage">Incorrect password. Try again.</p>
-                    </div>
-                `;
-
-                document.getElementById("submitPassword").addEventListener("click", function () {
-                    let userInput = document.getElementById("passwordInput").value;
-                    if (userInput === correctPassword) {
-                        sessionStorage.setItem("accessGranted", correctPassword);
-                        location.reload(); 
-                    } else {
-                        document.getElementById("errorMessage").style.display = "block";
-                    }
-                });
-            }
-        });
-    </script>
-
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
         const ArtPhotoCapture = () => {
+            const periods = ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6"];
+            const students = Array.from({ length: 20 }, (_, i) => `Student ${i + 1}`);
+            
+            const [selectedPeriod, setSelectedPeriod] = useState(periods[0]);
+            const [selectedStudent, setSelectedStudent] = useState(students[0]);
+            const [assignments, setAssignments] = useState(["Sketch 1", "Color Study", "Perspective Drawing", "Final Project"]);
+            const [selectedAssignment, setSelectedAssignment] = useState(assignments[0]);
+            const [newAssignment, setNewAssignment] = useState("");
             const [photos, setPhotos] = useState([]);
-            const [studentName, setStudentName] = useState('');
-            const [assignmentName, setAssignmentName] = useState('');
             const videoRef = useRef(null);
             const streamRef = useRef(null);
             const [showCamera, setShowCamera] = useState(false);
             const [error, setError] = useState(null);
-            const [isFrontCamera, setIsFrontCamera] = useState(true);
 
             const startCamera = async () => {
                 try {
@@ -68,11 +45,7 @@
                     }
 
                     const constraints = {
-                        video: {
-                            facingMode: isFrontCamera ? "user" : "environment",
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 }
-                        }
+                        video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } }
                     };
 
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -83,13 +56,8 @@
                         await videoRef.current.play();
                     }
                 } catch (err) {
-                    console.error('Camera error:', err);
                     setError(err.message);
                 }
-            };
-
-            const toggleCamera = () => {
-                setIsFrontCamera(prev => !prev);
             };
 
             const stopCamera = () => {
@@ -120,13 +88,25 @@
                     const photoUrl = canvas.toDataURL('image/jpeg', 0.9);
                     setPhotos([...photos, {
                         url: photoUrl,
-                        student: studentName,
-                        assignment: assignmentName,
+                        period: selectedPeriod,
+                        student: selectedStudent,
+                        assignment: selectedAssignment,
                         timestamp: new Date().toLocaleString()
                     }]);
                 } catch (err) {
                     setError('Failed to capture photo: ' + err.message);
                 }
+            };
+
+            const addAssignment = () => {
+                if (newAssignment.trim() && !assignments.includes(newAssignment)) {
+                    setAssignments([...assignments, newAssignment]);
+                    setNewAssignment("");
+                }
+            };
+
+            const removeAssignment = (assignment) => {
+                setAssignments(assignments.filter(a => a !== assignment));
             };
 
             useEffect(() => {
@@ -138,88 +118,53 @@
                         streamRef.current.getTracks().forEach(track => track.stop());
                     }
                 };
-            }, [showCamera, isFrontCamera]);
+            }, [showCamera]);
 
             return (
                 <div className="p-4 max-w-2xl mx-auto">
-                    {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                            {error}
-                        </div>
-                    )}
+                    {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
                     
                     <div className="mb-4 space-y-2">
-                        <input
-                            type="text"
-                            placeholder="Student Name"
-                            value={studentName}
-                            onChange={(e) => setStudentName(e.target.value)}
-                            className="w-full p-2 border rounded"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Assignment Name"
-                            value={assignmentName}
-                            onChange={(e) => setAssignmentName(e.target.value)}
-                            className="w-full p-2 border rounded"
-                        />
+                        <label>Class Period:</label>
+                        <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="w-full p-2 border rounded">
+                            {periods.map(period => <option key={period} value={period}>{period}</option>)}
+                        </select>
+
+                        <label>Student:</label>
+                        <select value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)} className="w-full p-2 border rounded">
+                            {students.map(student => <option key={student} value={student}>{student}</option>)}
+                        </select>
+
+                        <label>Assignment:</label>
+                        <select value={selectedAssignment} onChange={(e) => setSelectedAssignment(e.target.value)} className="w-full p-2 border rounded">
+                            {assignments.map(assignment => <option key={assignment} value={assignment}>{assignment}</option>)}
+                        </select>
+
+                        <div className="flex space-x-2">
+                            <input type="text" value={newAssignment} onChange={(e) => setNewAssignment(e.target.value)} placeholder="New Assignment" className="w-full p-2 border rounded"/>
+                            <button onClick={addAssignment} className="bg-blue-500 text-white p-2 rounded">Add</button>
+                        </div>
+
+                        <ul className="mt-2">
+                            {assignments.map(assignment => (
+                                <li key={assignment} className="flex justify-between p-2 border-b">
+                                    {assignment}
+                                    <button onClick={() => removeAssignment(assignment)} className="text-red-500">Remove</button>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
 
                     <div className="mb-4">
                         {!showCamera ? (
-                            <button 
-                                onClick={() => setShowCamera(true)}
-                                className="bg-blue-500 text-white p-2 rounded flex items-center gap-2"
-                            >
-                                Start Camera
-                            </button>
+                            <button onClick={() => setShowCamera(true)} className="bg-blue-500 text-white p-2 rounded">Start Camera</button>
                         ) : (
                             <div className="space-y-2">
-                                <video 
-                                    ref={videoRef} 
-                                    autoPlay 
-                                    playsInline
-                                    className="camera-preview rounded bg-black"
-                                />
-                                <div className="flex gap-2">
-                                    <button 
-                                        onClick={capturePhoto}
-                                        className="bg-green-500 text-white p-2 rounded flex-1"
-                                    >
-                                        Capture Photo
-                                    </button>
-                                    <button 
-                                        onClick={toggleCamera}
-                                        className="bg-blue-500 text-white p-2 rounded"
-                                    >
-                                        Switch Camera
-                                    </button>
-                                    <button 
-                                        onClick={stopCamera}
-                                        className="bg-red-500 text-white p-2 rounded"
-                                    >
-                                        Stop Camera
-                                    </button>
-                                </div>
+                                <video ref={videoRef} autoPlay playsInline className="camera-preview rounded bg-black"/>
+                                <button onClick={capturePhoto} className="bg-green-500 text-white p-2 rounded">Capture Photo</button>
+                                <button onClick={stopCamera} className="bg-red-500 text-white p-2 rounded">Stop Camera</button>
                             </div>
                         )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        {photos.map((photo, index) => (
-                            <div key={index} className="border rounded p-2">
-                                <img 
-                                    src={photo.url} 
-                                    alt="Captured artwork" 
-                                    className="w-full rounded"
-                                />
-                                <div className="mt-2 text-sm">
-                                    <p><strong>Student:</strong> {photo.student}</p>
-                                    <p><strong>Assignment:</strong> {photo.assignment}</p>
-                                    <p><strong>Time:</strong> {photo.timestamp}</p>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                 </div>
             );
