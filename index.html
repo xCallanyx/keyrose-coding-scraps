@@ -18,9 +18,38 @@
 </head>
 <body>
     <div id="root"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const correctPassword = "test"; // Set your password
+            const storedPassword = sessionStorage.getItem("accessGranted");
+
+            if (storedPassword !== correctPassword) {
+                document.body.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
+                        <h2>Enter Password to Access</h2>
+                        <input type="password" id="passwordInput" style="margin:10px; padding:5px;"/>
+                        <button id="submitPassword" style="padding:5px 10px; margin-top:10px;">Submit</button>
+                        <p style="color:red; display:none;" id="errorMessage">Incorrect password. Try again.</p>
+                    </div>
+                `;
+
+                document.getElementById("submitPassword").addEventListener("click", function () {
+                    let userInput = document.getElementById("passwordInput").value;
+                    if (userInput === correctPassword) {
+                        sessionStorage.setItem("accessGranted", correctPassword);
+                        location.reload(); // Reload the page to show content
+                    } else {
+                        document.getElementById("errorMessage").style.display = "block";
+                    }
+                });
+            }
+        });
+    </script>
+
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
-        
+
         const CameraIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -32,14 +61,6 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        );
-
-        const DownloadIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
         );
 
@@ -75,8 +96,6 @@
                         videoRef.current.srcObject = stream;
                         await videoRef.current.play();
                     }
-                    
-                    setShowCamera(true);
                 } catch (err) {
                     console.error('Camera error:', err);
                     setError(err.message);
@@ -84,8 +103,7 @@
             };
 
             const toggleCamera = () => {
-                setIsFrontCamera(!isFrontCamera);
-                startCamera();
+                setIsFrontCamera(prev => !prev);
             };
 
             const stopCamera = () => {
@@ -120,24 +138,16 @@
                 }
             };
 
-            const downloadPhotos = () => {
-                const data = JSON.stringify(photos);
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `art-photos-${new Date().toISOString().slice(0,10)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            };
-
             useEffect(() => {
+                if (showCamera) {
+                    startCamera();
+                }
                 return () => {
                     if (streamRef.current) {
                         streamRef.current.getTracks().forEach(track => track.stop());
                     }
                 };
-            }, []);
+            }, [showCamera, isFrontCamera]);
 
             return (
                 <div className="p-4 max-w-2xl mx-auto">
@@ -167,7 +177,7 @@
                     <div className="mb-4">
                         {!showCamera ? (
                             <button 
-                                onClick={startCamera}
+                                onClick={() => setShowCamera(true)}
                                 className="bg-blue-500 text-white p-2 rounded flex items-center gap-2"
                             >
                                 <CameraIcon />
