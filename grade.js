@@ -10,6 +10,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadPeriods() {
         const students = JSON.parse(localStorage.getItem("students")) || {};
         periodSelect.innerHTML = "<option value=''>Select Period</option>";
+
+        if (Object.keys(students).length === 0) {
+            periodSelect.innerHTML += "<option disabled>No periods available</option>";
+            return;
+        }
+
         for (const period in students) {
             const option = document.createElement("option");
             option.value = period;
@@ -21,6 +27,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadAssignmentsForPeriod() {
         const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
         assignmentSelect.innerHTML = "<option value=''>Select Assignment</option>";
+
+        if (assignments.length === 0) {
+            assignmentSelect.innerHTML += "<option disabled>No assignments available</option>";
+            return;
+        }
+
         assignments.forEach(assignment => {
             const option = document.createElement("option");
             option.value = assignment.name;
@@ -28,6 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
             option.dataset.points = assignment.points;
             assignmentSelect.appendChild(option);
         });
+
+        loadStudentsForAssignment();
     }
 
     function loadStudentsForAssignment() {
@@ -37,15 +51,19 @@ document.addEventListener("DOMContentLoaded", function () {
         
         studentSelect.innerHTML = "<option value=''>Select Student</option>";
 
-        if (photos[period]) {
-            for (const student in photos[period]) {
-                if (photos[period][student][assignment]) {
-                    const option = document.createElement("option");
-                    option.value = student;
-                    option.textContent = student;
-                    studentSelect.appendChild(option);
-                }
+        if (!period || !assignment || !photos[period]) return;
+
+        for (const student in photos[period]) {
+            if (photos[period][student][assignment]) {
+                const option = document.createElement("option");
+                option.value = student;
+                option.textContent = student;
+                studentSelect.appendChild(option);
             }
+        }
+
+        if (studentSelect.children.length === 1) {
+            studentSelect.innerHTML += "<option disabled>No students found</option>";
         }
     }
 
