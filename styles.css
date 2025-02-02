@@ -1,1 +1,110 @@
+/* General Page Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #f4f4f4;
+    text-align: center;
+}
+
+/* Headings */
+h1 {
+    color: #333;
+}
+
+h2 {
+    color: #444;
+}
+
+/* Forms & Inputs */
+input, select, textarea, button {
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 16px;
+}
+
+input, select, textarea {
+    width: 80%;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Student List */
+#studentList, #assignmentList, #photoGallery {
+    margin-top: 20px;
+    text-align: left;
+    display: inline-block;
+    width: 100%;
+    max-width: 600px;
+}
+
+#studentList ul, #assignmentList ul {
+    list-style: none;
+    padding: 0;
+}
+
+#studentList li, #assignmentList li {
+    background: white;
+    margin: 5px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* Camera Preview */
+#cameraPreview {
+    width: 100%;
+    max-width: 600px;
+    border: 2px solid #007BFF;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+/* Captured Photo Gallery */
+#photoGallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#photoGallery div {
+    position: relative;
+    margin: 5px;
+}
+
+#photoGallery img {
+    width: 100px;
+    height: 100px;
+    border-radius: 5px;
+}
+
+#photoGallery button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: red;
+    font-size: 12px;
+    padding: 5px;
+    border-radius: 50%;
+}
+
+/* Footer */
+footer {
+    margin-top: 20px;
+    font-size: 14px;
+}
 
