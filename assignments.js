@@ -3,8 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const notesInput = document.getElementById("assignmentNotes");
     const addAssignmentButton = document.getElementById("addAssignmentButton");
     const assignmentList = document.getElementById("assignmentList");
-    
-    // Load existing assignments from local storage
+
     function loadAssignments() {
         const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
         assignmentList.innerHTML = "";
@@ -15,8 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
             assignmentList.appendChild(li);
         });
     }
-    
-    // Add assignment to local storage
+
     addAssignmentButton.addEventListener("click", function () {
         const name = assignmentInput.value.trim();
         const notes = notesInput.value.trim();
@@ -24,25 +22,22 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("Assignment name cannot be empty.");
             return;
         }
-        
+
         const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
         assignments.push({ name, notes });
         localStorage.setItem("assignments", JSON.stringify(assignments));
-        
+
         assignmentInput.value = "";
         notesInput.value = "";
         loadAssignments();
     });
-    
-    // Delete assignment
+
     window.deleteAssignment = function (index) {
         const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
         assignments.splice(index, 1);
         localStorage.setItem("assignments", JSON.stringify(assignments));
         loadAssignments();
     };
-    
-    // Initialize
+
     loadAssignments();
 });
-
