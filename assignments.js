@@ -10,7 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
         assignmentList.innerHTML = "";
         assignments.forEach((assignment, index) => {
             const li = document.createElement("li");
-            li.innerHTML = `<strong>${assignment.name} (${assignment.points} pts)</strong><br>${assignment.notes}
+            li.innerHTML = `<strong>${assignment.name}</strong> - <b>${assignment.points} pts</b><br>
+                            <i>${assignment.notes}</i><br>
                             <button onclick="deleteAssignment(${index})">❌ Delete</button>`;
             assignmentList.appendChild(li);
         });
