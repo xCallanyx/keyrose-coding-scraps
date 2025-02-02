@@ -3,179 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Art Assignment Photo Tool</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <style>
-        .camera-preview {
-            width: 100%;
-            max-height: 80vh;
-            object-fit: cover;
-        }
-    </style>
+    <title>Student Import System</title>
+    <script defer src="student_import_system.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="root"></div>
+    <h1>Student Import System</h1>
 
-    <script type="text/babel">
-        const { useState, useRef, useEffect } = React;
+    <!-- CSV Upload Section -->
+    <div>
+        <h2>Upload Student List</h2>
+        <input type="file" id="csvFileInput" accept=".csv">
+        <button id="uploadButton">Upload CSV</button>
+    </div>
 
-        const ArtPhotoCapture = () => {
-            const periods = ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6"];
-            const students = Array.from({ length: 20 }, (_, i) => `Student ${i + 1}`);
-            
-            const [selectedPeriod, setSelectedPeriod] = useState(periods[0]);
-            const [selectedStudent, setSelectedStudent] = useState(students[0]);
-            const [assignments, setAssignments] = useState(["Sketch 1", "Color Study", "Perspective Drawing", "Final Project"]);
-            const [selectedAssignment, setSelectedAssignment] = useState(assignments[0]);
-            const [newAssignment, setNewAssignment] = useState("");
-            const [photos, setPhotos] = useState([]);
-            const [isFrontCamera, setIsFrontCamera] = useState(false);
-            const videoRef = useRef(null);
-            const streamRef = useRef(null);
-            const [showCamera, setShowCamera] = useState(false);
-            const [error, setError] = useState(null);
+    <hr>
 
-            const startCamera = async () => {
-                try {
-                    setError(null);
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                    }
+    <!-- Manual Student Entry -->
+    <div>
+        <h2>Manually Add a Student</h2>
+        <label>Period:</label>
+        <input type="text" id="periodInput" placeholder="Enter Period">
 
-                    const constraints = {
-                        video: { facingMode: isFrontCamera ? "user" : "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
-                    };
+        <label>First Name:</label>
+        <input type="text" id="firstNameInput" placeholder="Enter First Name">
 
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    streamRef.current = stream;
-                    
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        await videoRef.current.play();
-                    }
-                    setShowCamera(true);
-                } catch (err) {
-                    setError(err.message);
-                }
-            };
+        <label>Last Name:</label>
+        <input type="text" id="lastNameInput" placeholder="Enter Last Name">
 
-            const toggleCamera = () => {
-                setIsFrontCamera(prev => !prev);
-                startCamera();
-            };
+        <button id="addStudentButton">Add Student</button>
+    </div>
 
-            const stopCamera = () => {
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
-                }
-                if (videoRef.current) {
-                    videoRef.current.srcObject = null;
-                }
-                setShowCamera(false);
-            };
+    <hr>
 
-            const capturePhoto = () => {
-                try {
-                    const video = videoRef.current;
-                    if (!video || !video.videoWidth) {
-                        setError("Camera is not ready.");
-                        return;
-                    }
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                    const photoUrl = canvas.toDataURL('image/jpeg', 0.9);
-                    setPhotos([...photos, {
-                        url: photoUrl,
-                        period: selectedPeriod,
-                        student: selectedStudent,
-                        assignment: selectedAssignment,
-                        timestamp: new Date().toLocaleString()
-                    }]);
-                } catch (err) {
-                    setError('Failed to capture photo: ' + err.message);
-                }
-            };
-
-            const addAssignment = () => {
-                if (newAssignment.trim() && !assignments.includes(newAssignment)) {
-                    setAssignments([...assignments, newAssignment]);
-                    setNewAssignment("");
-                }
-            };
-
-            const removeAssignment = (assignment) => {
-                setAssignments(assignments.filter(a => a !== assignment));
-            };
-
-            useEffect(() => {
-                return () => {
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                    }
-                };
-            }, []);
-
-            return (
-                <div className="p-4 max-w-2xl mx-auto">
-                    {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-                    
-                    <div className="mb-4 space-y-2">
-                        <label>Class Period:</label>
-                        <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="w-full p-2 border rounded">
-                            {periods.map(period => <option key={period} value={period}>{period}</option>)}
-                        </select>
-
-                        <label>Student:</label>
-                        <select value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)} className="w-full p-2 border rounded">
-                            {students.map(student => <option key={student} value={student}>{student}</option>)}
-                        </select>
-
-                        <label>Assignment:</label>
-                        <select value={selectedAssignment} onChange={(e) => setSelectedAssignment(e.target.value)} className="w-full p-2 border rounded">
-                            {assignments.map(assignment => <option key={assignment} value={assignment}>{assignment}</option>)}
-                        </select>
-
-                        <div className="flex space-x-2">
-                            <input type="text" value={newAssignment} onChange={(e) => setNewAssignment(e.target.value)} placeholder="New Assignment" className="w-full p-2 border rounded"/>
-                            <button onClick={addAssignment} className="bg-blue-500 text-white p-2 rounded">Add</button>
-                        </div>
-
-                        <ul className="mt-2">
-                            {assignments.map(assignment => (
-                                <li key={assignment} className="flex justify-between p-2 border-b">
-                                    {assignment}
-                                    <button onClick={() => removeAssignment(assignment)} className="text-red-500">Remove</button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="mb-4">
-                        {!showCamera ? (
-                            <button onClick={startCamera} className="bg-blue-500 text-white p-2 rounded">Start Camera</button>
-                        ) : (
-                            <div className="space-y-2">
-                                <video ref={videoRef} autoPlay playsInline className="camera-preview rounded bg-black"/>
-                                <button onClick={capturePhoto} className="bg-green-500 text-white p-2 rounded">Capture Photo</button>
-                                <button onClick={toggleCamera} className="bg-yellow-500 text-white p-2 rounded">Flip Camera</button>
-                                <button onClick={stopCamera} className="bg-red-500 text-white p-2 rounded">Stop Camera</button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        ReactDOM.render(<ArtPhotoCapture />, document.getElementById('root'));
-    </script>
+    <!-- Display Student List -->
+    <div>
+        <h2>Student List</h2>
+        <div id="studentList"></div>
+    </div>
 </body>
 </html>
