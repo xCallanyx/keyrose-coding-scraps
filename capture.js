@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const periodSelect = document.getElementById("periodSelect");
     const studentSelect = document.getElementById("studentSelect");
     const assignmentSelect = document.getElementById("assignmentSelect");
     const startCameraButton = document.getElementById("startCameraButton");
@@ -11,22 +12,34 @@ document.addEventListener("DOMContentLoaded", function () {
     let stream = null;
     let photos = JSON.parse(localStorage.getItem("photos")) || {};
 
-    function loadStudentsAndAssignments() {
+    function loadPeriods() {
         const students = JSON.parse(localStorage.getItem("students")) || {};
-        const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
-        
-        studentSelect.innerHTML = "<option value=''>Select Student</option>";
-        assignmentSelect.innerHTML = "<option value=''>Select Assignment</option>";
-        
+        periodSelect.innerHTML = "<option value=''>Select Period</option>";
         for (const period in students) {
-            students[period].forEach(student => {
+            const option = document.createElement("option");
+            option.value = period;
+            option.textContent = `Period ${period}`;
+            periodSelect.appendChild(option);
+        }
+    }
+    
+    function loadStudentsForPeriod() {
+        const students = JSON.parse(localStorage.getItem("students")) || {};
+        studentSelect.innerHTML = "<option value=''>Select Student</option>";
+        const selectedPeriod = periodSelect.value;
+        if (students[selectedPeriod]) {
+            students[selectedPeriod].forEach(student => {
                 const option = document.createElement("option");
-                option.value = `${period}-${student.firstName} ${student.lastName}`;
-                option.textContent = `${student.lastName}, ${student.firstName} (Period ${period})`;
+                option.value = `${student.firstName} ${student.lastName}`;
+                option.textContent = `${student.lastName}, ${student.firstName}`;
                 studentSelect.appendChild(option);
             });
         }
-        
+    }
+    
+    function loadAssignments() {
+        const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
+        assignmentSelect.innerHTML = "<option value=''>Select Assignment</option>";
         assignments.forEach(assignment => {
             const option = document.createElement("option");
             option.value = assignment.name;
@@ -37,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     startCameraButton.addEventListener("click", async () => {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             cameraPreview.srcObject = stream;
             captureButton.disabled = false;
         } catch (error) {
@@ -58,7 +71,8 @@ document.addEventListener("DOMContentLoaded", function () {
         context.drawImage(cameraPreview, 0, 0);
         const photoData = canvas.toDataURL("image/jpeg");
         
-        const [period, studentName] = studentSelect.value.split("-");
+        const period = periodSelect.value;
+        const studentName = studentSelect.value;
         const assignment = assignmentSelect.value;
         
         if (!photos[period]) photos[period] = {};
@@ -103,6 +117,8 @@ document.addEventListener("DOMContentLoaded", function () {
         displayPhotos();
     }
     
-    loadStudentsAndAssignments();
+    periodSelect.addEventListener("change", loadStudentsForPeriod);
+    loadPeriods();
+    loadAssignments();
     displayPhotos();
 });
