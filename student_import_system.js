@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const periodInput = document.getElementById("periodInput");
     const firstNameInput = document.getElementById("firstNameInput");
     const lastNameInput = document.getElementById("lastNameInput");
-    const wipeButton = document.getElementById("wipeButton");
 
     uploadButton.addEventListener("click", function () {
         const file = fileInput.files[0];
@@ -38,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
             students[period] = [];
         }
 
-        students[period].push({ period: period, firstName: firstName, lastName: lastName });
+        students[period].push({ period, firstName, lastName });
         students[period].sort((a, b) => a.lastName.localeCompare(b.lastName));
         localStorage.setItem("students", JSON.stringify(students));
         displayStudents(students);
@@ -46,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function processCSV(csvText) {
         const rows = csvText.split("\n").map(row => row.trim()).filter(row => row);
-        const students = [];
+        const students = {};
 
         rows.forEach((row, index) => {
             const columns = row.split(",").map(col => col.trim());
@@ -67,30 +66,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            students.push({ period: period, firstName: firstName, lastName: lastName });
+            if (!students[period]) students[period] = [];
+            students[period].push({ period, firstName, lastName });
         });
 
-        students.sort((a, b) => a.lastName.localeCompare(b.lastName));
-
-        const groupedStudents = {};
-        students.forEach(student => {
-            if (!groupedStudents[student.period]) {
-                groupedStudents[student.period] = [];
-            }
-            groupedStudents[student.period].push(student);
-        });
-
-        localStorage.setItem("students", JSON.stringify(groupedStudents));
-        displayStudents(groupedStudents);
+        localStorage.setItem("students", JSON.stringify(students));
+        displayStudents(students);
     }
 
-    function displayStudents(groupedStudents) {
+    function displayStudents(students) {
         studentList.innerHTML = "";
-        for (const period in groupedStudents) {
+        for (const period in students) {
             const section = document.createElement("div");
             section.innerHTML = `<h3>Period ${period}</h3>`;
             const ul = document.createElement("ul");
-            groupedStudents[period].forEach(student => {
+            students[period].forEach(student => {
                 const li = document.createElement("li");
                 li.textContent = `${student.lastName}, ${student.firstName}`;
                 ul.appendChild(li);
