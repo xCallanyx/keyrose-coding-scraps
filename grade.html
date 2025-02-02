@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Assignments</title>
+    <script defer src="grade.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Grade Assignments</h1>
+    
+    <div>
+        <h2>Select Period</h2>
+        <label for="periodSelect">Period:</label>
+        <select id="periodSelect"></select>
+    </div>
+    
+    <div>
+        <h2>Select Assignment</h2>
+        <label for="assignmentSelect">Assignment:</label>
+        <select id="assignmentSelect"></select>
+    </div>
+    
+    <div>
+        <h2>Grade Student Work</h2>
+        <label for="studentSelect">Student:</label>
+        <select id="studentSelect"></select>
+        
+        <label for="gradeInput">Grade (Points):</label>
+        <input type="number" id="gradeInput" min="0">
+        
+        <button id="submitGrade">Submit Grade</button>
+    </div>
+    
+    <footer>
+        <a href="index.html">⬅ Back to Home</a>
+    </footer>
+</body>
+</html>
