@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const photoGallery = document.getElementById("photoGallery");
     const exportByPeriodButton = document.getElementById("exportByPeriod");
     const exportByAssignmentButton = document.getElementById("exportByAssignment");
-    
+
     let stream = null;
     let photos = JSON.parse(localStorage.getItem("photos")) || {};
 
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
             periodSelect.appendChild(option);
         }
     }
-    
+
     function loadStudentsForPeriod() {
         const students = JSON.parse(localStorage.getItem("students")) || {};
         studentSelect.innerHTML = "<option value=''>Select Student</option>";
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
-    
+
     function loadAssignments() {
         const assignments = JSON.parse(localStorage.getItem("assignments")) || [];
         assignmentSelect.innerHTML = "<option value=''>Select Assignment</option>";
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
             assignmentSelect.appendChild(option);
         });
     }
-    
+
     startCameraButton.addEventListener("click", async () => {
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -57,33 +57,33 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("Error accessing camera: " + error.message);
         }
     });
-    
+
     captureButton.addEventListener("click", () => {
         if (!studentSelect.value || !assignmentSelect.value) {
             alert("Please select a student and assignment before capturing a photo.");
             return;
         }
-        
+
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         canvas.width = cameraPreview.videoWidth;
         canvas.height = cameraPreview.videoHeight;
         context.drawImage(cameraPreview, 0, 0);
         const photoData = canvas.toDataURL("image/jpeg");
-        
+
         const period = periodSelect.value;
         const studentName = studentSelect.value;
         const assignment = assignmentSelect.value;
-        
+
         if (!photos[period]) photos[period] = {};
         if (!photos[period][studentName]) photos[period][studentName] = {};
         if (!photos[period][studentName][assignment]) photos[period][studentName][assignment] = [];
-        
+
         photos[period][studentName][assignment].push(photoData);
         localStorage.setItem("photos", JSON.stringify(photos));
         displayPhotos();
     });
-    
+
     function displayPhotos() {
         photoGallery.innerHTML = "";
         for (const period in photos) {
@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }
-    
+
     function deletePhoto(period, student, assignment, index) {
         photos[period][student][assignment].splice(index, 1);
         if (photos[period][student][assignment].length === 0) {
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("photos", JSON.stringify(photos));
         displayPhotos();
     }
-    
+
     periodSelect.addEventListener("change", loadStudentsForPeriod);
     loadPeriods();
     loadAssignments();
