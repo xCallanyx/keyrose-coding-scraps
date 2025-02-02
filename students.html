@@ -3,52 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Import System</title>
-    <script defer src="student_import_system.js"></script>
-    <script defer src="wipe_data.js"></script>
+    <title>Capture Photos</title>
+    <script defer src="capture.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Student Import System</h1>
-
-    <!-- CSV Upload Section -->
+    <h1>Capture Student Artwork</h1>
+    
+    <!-- Select Student & Assignment -->
     <div>
-        <h2>Upload Student List</h2>
-        <input type="file" id="csvFileInput" accept=".csv">
-        <button id="uploadButton">Upload CSV</button>
+        <h2>Select Student & Assignment</h2>
+        <label for="periodSelect">Period:</label>
+        <select id="periodSelect"></select>
+        
+        <label for="studentSelect">Student:</label>
+        <select id="studentSelect"></select>
+        
+        <label for="assignmentSelect">Assignment:</label>
+        <select id="assignmentSelect"></select>
     </div>
-
+    
     <hr>
-
-    <!-- Manual Student Entry -->
+    
+    <!-- Camera & Capture -->
     <div>
-        <h2>Manually Add a Student</h2>
-        <label>Period:</label>
-        <input type="text" id="periodInput" placeholder="Enter Period">
-
-        <label>First Name:</label>
-        <input type="text" id="firstNameInput" placeholder="Enter First Name">
-
-        <label>Last Name:</label>
-        <input type="text" id="lastNameInput" placeholder="Enter Last Name">
-
-        <button id="addStudentButton">Add Student</button>
+        <h2>Camera</h2>
+        <video id="cameraPreview" autoplay playsinline></video>
+        <button id="startCameraButton">Start Camera</button>
+        <button id="captureButton" disabled>Capture Photo</button>
     </div>
-
+    
     <hr>
-
-    <!-- Display Student List -->
+    
+    <!-- Captured Photos -->
     <div>
-        <h2>Student List</h2>
-        <div id="studentList"></div>
+        <h2>Captured Photos</h2>
+        <div id="photoGallery"></div>
     </div>
+    
     <hr>
+    
+    <!-- Export Options -->
     <div>
-        <h2>Developer Tools (Testing Phase)</h2>
-        <button id="wipeButton" style="background-color: red; color: white; padding: 10px; border: none; cursor: pointer;">
-            Wipe All Data
-        </button>
+        <h2>Export Photos</h2>
+        <button id="exportByPeriod">Export by Period</button>
+        <button id="exportByAssignment">Export by Assignment</button>
     </div>
-
+    
+    <footer>
+        <a href="index.html">⬅ Back to Home</a>
+    </footer>
 </body>
 </html>
