@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const periodInput = document.getElementById("periodInput");
     const firstNameInput = document.getElementById("firstNameInput");
     const lastNameInput = document.getElementById("lastNameInput");
+    const wipeButton = document.getElementById("wipeButton");
 
     uploadButton.addEventListener("click", function () {
         const file = fileInput.files[0];
@@ -27,8 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const firstName = firstNameInput.value.trim() || "Unknown";
         const lastName = lastNameInput.value.trim() || "Unknown";
 
-        if (!period) {
-            alert("Please enter a period.");
+        if (!period || isNaN(period)) {
+            alert("Please enter a valid numeric period.");
             return;
         }
 
@@ -49,13 +50,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
         rows.forEach((row, index) => {
             const columns = row.split(",").map(col => col.trim());
+            if (index === 0 && columns[0].toLowerCase() === "period") {
+                return; // Skip header row
+            }
             if (columns.length !== 3) {
-                alert(`Error in row ${index + 1}: Incorrect number of columns.`);
+                alert(`Error in row ${index + 1}: Incorrect format.`);
                 return;
             }
 
-            const [period, firstName, lastName] = columns;
-            students.push({ period: period, firstName: firstName || "Unknown", lastName: lastName || "Unknown" });
+            const period = columns[0].trim();
+            const firstName = columns[1].replace(/"/g, "").trim() || "Unknown";
+            const lastName = columns[2].replace(/"/g, "").trim() || "Unknown";
+
+            if (isNaN(period)) {
+                alert(`Error in row ${index + 1}: Period must be a number.`);
+                return;
+            }
+
+            students.push({ period: period, firstName: firstName, lastName: lastName });
         });
 
         students.sort((a, b) => a.lastName.localeCompare(b.lastName));
