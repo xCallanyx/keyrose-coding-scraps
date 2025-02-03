@@ -1,11 +1,15 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebaseConfig.js"; // Import Firebase config
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 document.addEventListener("DOMContentLoaded", function () {
     const fileInput = document.getElementById("csvFileInput");
     const uploadButton = document.getElementById("uploadButton");
     const studentList = document.getElementById("studentList");
-    const addStudentButton = document.getElementById("addStudentButton");
-    const periodInput = document.getElementById("periodInput");
-    const firstNameInput = document.getElementById("firstNameInput");
-    const lastNameInput = document.getElementById("lastNameInput");
 
     uploadButton.addEventListener("click", function () {
         const file = fileInput.files[0];
@@ -22,28 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         reader.readAsText(file);
     });
 
-    addStudentButton.addEventListener("click", function () {
-        const period = periodInput.value.trim();
-        const firstName = firstNameInput.value.trim() || "Unknown";
-        const lastName = lastNameInput.value.trim() || "Unknown";
-
-        if (!period || isNaN(period)) {
-            alert("Please enter a valid numeric period.");
-            return;
-        }
-
-        const students = JSON.parse(localStorage.getItem("students")) || {};
-        if (!students[period]) {
-            students[period] = [];
-        }
-
-        students[period].push({ period, firstName, lastName });
-        students[period].sort((a, b) => a.lastName.localeCompare(b.lastName));
-        localStorage.setItem("students", JSON.stringify(students));
-        displayStudents(students);
-    });
-
-    function processCSV(csvText) {
+    async function processCSV(csvText) {
         const rows = csvText.split("\n").map(row => row.trim()).filter(row => row);
         const students = {};
 
@@ -52,14 +35,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (index === 0 && columns[0].toLowerCase() === "period") {
                 return; // Skip header row
             }
-            if (columns.length !== 3) {
+            if (columns.length !== 2) {
                 alert(`Error in row ${index + 1}: Incorrect format.`);
                 return;
             }
 
             const period = columns[0].trim();
-            const firstName = columns[1].replace(/"/g, "").trim() || "Unknown";
-            const lastName = columns[2].replace(/"/g, "").trim() || "Unknown";
+            const firstName = columns[1].trim() || "Unknown";
 
             if (isNaN(period)) {
                 alert(`Error in row ${index + 1}: Period must be a number.`);
@@ -67,10 +49,36 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (!students[period]) students[period] = [];
-            students[period].push({ period, firstName, lastName });
+            students[period].push({ firstName });
         });
 
-        localStorage.setItem("students", JSON.stringify(students));
+        await saveStudentsToFirebase(students);
+        loadStudentsFromFirebase(); // Reload after saving
+    }
+
+    async function saveStudentsToFirebase(students) {
+        for (const period in students) {
+            for (const student of students[period]) {
+                await addDoc(collection(db, "students"), {
+                    period: parseInt(period),
+                    firstName: student.firstName
+                });
+            }
+        }
+    }
+
+    async function loadStudentsFromFirebase() {
+        const studentsSnapshot = await getDocs(collection(db, "students"));
+        const students = {};
+
+        studentsSnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (!students[data.period]) {
+                students[data.period] = [];
+            }
+            students[data.period].push({ firstName: data.firstName });
+        });
+
         displayStudents(students);
     }
 
@@ -82,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const ul = document.createElement("ul");
             students[period].forEach(student => {
                 const li = document.createElement("li");
-                li.textContent = `${student.lastName}, ${student.firstName}`;
+                li.textContent = `${student.firstName}`;
                 ul.appendChild(li);
             });
             section.appendChild(ul);
@@ -90,8 +98,5 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    const savedStudents = localStorage.getItem("students");
-    if (savedStudents) {
-        displayStudents(JSON.parse(savedStudents));
-    }
+    loadStudentsFromFirebase(); // Load students on page load
 });
