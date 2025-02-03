@@ -6,8 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const captureButton = document.getElementById("captureButton");
     const cameraPreview = document.getElementById("cameraPreview");
     const photoGallery = document.getElementById("photoGallery");
-    const exportByPeriodButton = document.getElementById("exportByPeriod");
-    const exportByAssignmentButton = document.getElementById("exportByAssignment");
 
     let stream = null;
     let photos = JSON.parse(localStorage.getItem("photos")) || {};
@@ -30,8 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (students[selectedPeriod]) {
             students[selectedPeriod].forEach(student => {
                 const option = document.createElement("option");
-                option.value = `${student.firstName} ${student.lastName}`;
-                option.textContent = `${student.lastName}, ${student.firstName}`;
+                option.value = student.firstName;
+                option.textContent = student.firstName;
                 studentSelect.appendChild(option);
             });
         }
